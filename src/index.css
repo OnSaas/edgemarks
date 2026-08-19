@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+	--font-sans: "IBM Plex Sans", "Noto Sans SC", ui-sans-serif, system-ui, sans-serif;
+	--color-accent: #0f766e;
+	--color-accent-fg: #ecfdf5;
+}
+
+html,
+body,
+#root {
+	min-height: 100%;
+}
+
+body {
+	margin: 0;
+	font-family: var(--font-sans);
+	background: var(--bg);
+	color: var(--fg);
+}
+
+:root {
+	--bg: #f4f4f5;
+	--fg: #18181b;
+	--card: #ffffff;
+	--muted: #71717a;
+	--line: #e4e4e7;
+	--soft: #fafafa;
+}
+
+.dark {
+	--bg: #09090b;
+	--fg: #fafafa;
+	--card: #18181b;
+	--muted: #a1a1aa;
+	--line: #27272a;
+	--soft: #111113;
+}
+
+::selection {
+	background: #0f766e55;
+}

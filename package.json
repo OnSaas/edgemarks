@@ -1,0 +1,36 @@
+{
+	"name": "edgemarks",
+	"version": "1.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"build": "vite build",
+		"preview": "vite preview",
+		"deploy": "vite build && wrangler deploy",
+		"cf-typegen": "wrangler types",
+		"test": "vitest run",
+		"test:watch": "vitest"
+	},
+	"dependencies": {
+		"@base-ui/react": "^1.7.0",
+		"hono": "^4.13.3",
+		"lucide-react": "^1.33.0",
+		"react": "^19.2.8",
+		"react-dom": "^19.2.8",
+		"react-router-dom": "^7.18.2"
+	},
+	"devDependencies": {
+		"@cloudflare/vite-plugin": "^1.53.0",
+		"@tailwindcss/vite": "^4.3.3",
+		"@types/node": "^26.2.0",
+		"@types/react": "^19.2.18",
+		"@types/react-dom": "^19.2.4",
+		"@vitejs/plugin-react": "^6.0.5",
+		"tailwindcss": "^4.3.3",
+		"typescript": "^7.0.2",
+		"vite": "^8.2.1",
+		"vitest": "^4.1.11",
+		"wrangler": "^4.124.0"
+	}
+}
