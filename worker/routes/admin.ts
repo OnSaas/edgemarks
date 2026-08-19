@@ -1,5 +1,6 @@
 import { Hono } from "hono";
-import type { BackupPayload, Bookmark, Group, SiteConfig } from "../../shared/types";
+import type { BackupPayload, Bookmark, Group, SiteConfig, SiteFeatures } from "../../shared/types";
+import { mergeFeatures } from "../../shared/types";
 import { KEYS } from "../env";
 import { detectAndParse, mergeImport, toNetscapeHtml } from "../import-export";
 import { hashPassword, verifyPassword } from "../password";
@@ -294,12 +295,24 @@ adminApi.get("/settings", async (c) => {
 });
 
 adminApi.put("/settings", async (c) => {
-	const body = await c.req.json<Partial<SiteConfig>>().catch(() => ({}));
+	const body = await c.req.json<Partial<SiteConfig> & { features?: Partial<SiteFeatures> }>().catch(() => ({}));
 	const config = await getConfig(c.env);
-	if (body.siteName?.trim()) config.siteName = body.siteName.trim();
+	if (typeof body.siteName === "string" && body.siteName.trim()) config.siteName = body.siteName.trim();
+	if (typeof body.siteDescription === "string") config.siteDescription = body.siteDescription.trim().slice(0, 240);
+	if (typeof body.siteIcon === "string") {
+		const icon = body.siteIcon.trim();
+		if (icon && icon.length > 280_000) return c.json({ error: "icon_too_large" }, 400);
+		if (icon && !icon.startsWith("data:image/") && !/^https?:\/\//i.test(icon) && icon !== "/favicon.svg") {
+			return c.json({ error: "invalid_icon" }, 400);
+		}
+		config.siteIcon = icon;
+	}
 	if (body.defaultLocale === "zh" || body.defaultLocale === "en") config.defaultLocale = body.defaultLocale;
 	if (body.defaultTheme === "system" || body.defaultTheme === "dark" || body.defaultTheme === "light") {
 		config.defaultTheme = body.defaultTheme;
+	}
+	if (body.features && typeof body.features === "object") {
+		config.features = mergeFeatures({ ...config.features, ...body.features });
 	}
 	config.updatedAt = Date.now();
 	await putConfig(c.env, config);

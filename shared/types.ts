@@ -1,6 +1,22 @@
 export type Locale = "zh" | "en";
 export type ThemeMode = "system" | "dark" | "light";
 
+export type SiteFeatures = {
+	showLoginButton: boolean;
+	showLanguageToggle: boolean;
+	showThemeToggle: boolean;
+	showSearch: boolean;
+	showTags: boolean;
+};
+
+export const DEFAULT_FEATURES: SiteFeatures = {
+	showLoginButton: true,
+	showLanguageToggle: true,
+	showThemeToggle: true,
+	showSearch: true,
+	showTags: true,
+};
+
 export type Bookmark = {
 	id: string;
 	title: string;
@@ -27,18 +43,24 @@ export type Group = {
 
 export type SiteConfig = {
 	siteName: string;
+	siteIcon: string;
+	siteDescription: string;
 	defaultLocale: Locale;
 	defaultTheme: ThemeMode;
 	passwordHash: string;
 	setupComplete: boolean;
 	updatedAt: number;
+	features: SiteFeatures;
 };
 
 export type PublicSite = {
 	siteName: string;
+	siteIcon: string;
+	siteDescription: string;
 	defaultLocale: Locale;
 	defaultTheme: ThemeMode;
 	setupComplete: boolean;
+	features: SiteFeatures;
 };
 
 export type BackupPayload = {
@@ -59,3 +81,7 @@ export type ImportResult = {
 export type SessionUser = {
 	role: "admin";
 };
+
+export function mergeFeatures(raw?: Partial<SiteFeatures> | null): SiteFeatures {
+	return { ...DEFAULT_FEATURES, ...(raw ?? {}) };
+}

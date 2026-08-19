@@ -1,19 +1,29 @@
 import type { Bookmark, Group, PublicSite, SiteConfig } from "../shared/types";
+import { mergeFeatures } from "../shared/types";
 import { KEYS, type Env } from "./env";
 import { hashPassword } from "./password";
 
 const defaultConfig = (): SiteConfig => ({
 	siteName: "EdgeBookmarks",
+	siteIcon: "",
+	siteDescription: "",
 	defaultLocale: "zh",
 	defaultTheme: "dark",
 	passwordHash: "",
 	setupComplete: false,
 	updatedAt: Date.now(),
+	features: mergeFeatures(),
 });
 
 export async function getConfig(env: Env): Promise<SiteConfig> {
-	const stored = await env.KV.get<SiteConfig>(KEYS.config, "json");
-	const config = stored ?? defaultConfig();
+	const stored = await env.KV.get<Partial<SiteConfig>>(KEYS.config, "json");
+	const config: SiteConfig = {
+		...defaultConfig(),
+		...(stored ?? {}),
+		features: mergeFeatures(stored?.features),
+		siteIcon: stored?.siteIcon ?? "",
+		siteDescription: stored?.siteDescription ?? "",
+	};
 	if (!config.setupComplete && env.ADMIN_PASSWORD) {
 		config.passwordHash = await hashPassword(env.ADMIN_PASSWORD, env.JWT_SECRET);
 		config.setupComplete = true;
@@ -30,9 +40,12 @@ export async function putConfig(env: Env, config: SiteConfig): Promise<void> {
 export function toPublicSite(config: SiteConfig): PublicSite {
 	return {
 		siteName: config.siteName,
+		siteIcon: config.siteIcon || "",
+		siteDescription: config.siteDescription || "",
 		defaultLocale: config.defaultLocale,
 		defaultTheme: config.defaultTheme,
 		setupComplete: config.setupComplete,
+		features: mergeFeatures(config.features),
 	};
 }
 

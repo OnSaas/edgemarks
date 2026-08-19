@@ -2,10 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import type { Bookmark, Group } from "@shared/types";
 import { BookmarkCard } from "../components/BookmarkCard";
 import { api } from "../lib/api";
+import { useAuth } from "../lib/auth";
 import { useT } from "../lib/i18n";
+import { DEFAULT_FEATURES } from "@shared/types";
 
 export function HomePage() {
 	const t = useT();
+	const { site } = useAuth();
+	const features = { ...DEFAULT_FEATURES, ...site?.features };
 	const [q, setQ] = useState("");
 	const [groupId, setGroupId] = useState("");
 	const [tag, setTag] = useState("");
@@ -69,7 +73,7 @@ export function HomePage() {
 						))}
 					</div>
 				</div>
-				{tags.length > 0 && (
+				{features.showTags && tags.length > 0 && (
 					<div>
 						<p className="mb-2 text-xs font-medium tracking-wide text-[var(--muted)] uppercase">{t("count.tags")}</p>
 						<div className="flex flex-wrap gap-1.5">
@@ -88,12 +92,15 @@ export function HomePage() {
 				)}
 			</aside>
 			<section>
-				<input
-					value={q}
-					onChange={(e) => setQ(e.target.value)}
-					placeholder={t("search.placeholder")}
-					className="mb-4 w-full rounded-xl border border-[var(--line)] bg-[var(--card)] px-4 py-2.5"
-				/>
+				{features.showSearch && (
+					<input
+						value={q}
+						onChange={(e) => setQ(e.target.value)}
+						placeholder={t("search.placeholder")}
+						className="mb-4 w-full rounded-xl border border-[var(--line)] bg-[var(--card)] px-4 py-2.5"
+					/>
+				)}
+				{site?.siteDescription && <p className="mb-3 text-sm text-[var(--muted)]">{site.siteDescription}</p>}
 				<p className="mb-3 text-sm text-[var(--muted)]">{t("count.bookmarks", { n: bookmarks.length })}</p>
 				{loading ? (
 					<p className="text-sm text-[var(--muted)]">…</p>

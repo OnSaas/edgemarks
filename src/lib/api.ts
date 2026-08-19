@@ -62,7 +62,7 @@ export const api = {
 	restore: (payload: BackupPayload) => request("/api/admin/restore", { method: "POST", body: JSON.stringify({ payload }) }),
 	restoreKey: (key: string) => request("/api/admin/restore", { method: "POST", body: JSON.stringify({ key }) }),
 	settings: () => request<PublicSite>("/api/admin/settings"),
-	saveSettings: (body: Partial<PublicSite>) =>
+	saveSettings: (body: Partial<PublicSite> & { features?: Partial<PublicSite["features"]> }) =>
 		request<PublicSite>("/api/admin/settings", { method: "PUT", body: JSON.stringify(body) }),
 	changePassword: (current: string, next: string) =>
 		request("/api/admin/password", { method: "PUT", body: JSON.stringify({ current, next }) }),
