@@ -57,6 +57,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
 									{t("nav.admin")}
 								</NavLink>
 								<NavLink
+									to="/admin/site"
+									className={({ isActive }) =>
+										`rounded-lg px-2.5 py-1.5 ${isActive ? "bg-[var(--card)]" : "text-[var(--muted)] hover:text-[var(--fg)]"}`
+									}
+								>
+									{t("nav.site")}
+								</NavLink>
+								<NavLink
 									to="/admin/import"
 									className={({ isActive }) =>
 										`hidden rounded-lg px-2.5 py-1.5 sm:inline ${isActive ? "bg-[var(--card)]" : "text-[var(--muted)] hover:text-[var(--fg)]"}`

@@ -7,6 +7,7 @@ import { ImportPage } from "./pages/ImportPage";
 import { LoginPage } from "./pages/LoginPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { SetupPage } from "./pages/SetupPage";
+import { SiteConfigPage } from "./pages/SiteConfigPage";
 
 function Guard({ children }: { children: React.ReactNode }) {
 	const { ready, admin, site } = useAuth();
@@ -48,6 +49,14 @@ export default function App() {
 					element={
 						<Guard>
 							<ImportPage />
+						</Guard>
+					}
+				/>
+				<Route
+					path="/admin/site"
+					element={
+						<Guard>
+							<SiteConfigPage />
 						</Guard>
 					}
 				/>
