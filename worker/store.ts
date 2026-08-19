@@ -15,7 +15,7 @@ export async function getConfig(env: Env): Promise<SiteConfig> {
 	const stored = await env.KV.get<SiteConfig>(KEYS.config, "json");
 	const config = stored ?? defaultConfig();
 	if (!config.setupComplete && env.ADMIN_PASSWORD) {
-		config.passwordHash = await hashPassword(env.ADMIN_PASSWORD);
+		config.passwordHash = await hashPassword(env.ADMIN_PASSWORD, env.JWT_SECRET);
 		config.setupComplete = true;
 		config.updatedAt = Date.now();
 		await putConfig(env, config);

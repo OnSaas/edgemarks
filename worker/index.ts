@@ -7,6 +7,11 @@ import { publicApi } from "./routes/public";
 
 const app = new Hono<AppEnv>();
 
+app.onError((err, c) => {
+	console.error(err);
+	return c.json({ error: "internal_error", message: err.message }, 500);
+});
+
 app.use(
 	"/api/*",
 	cors({

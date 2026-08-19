@@ -1,4 +1,3 @@
-const ITERATIONS = 210_000;
 const encoder = new TextEncoder();
 
 function toB64(bytes: ArrayBuffer | Uint8Array): string {
@@ -15,29 +14,37 @@ function fromB64(input: string): Uint8Array {
 	return out;
 }
 
-async function derive(password: string, salt: Uint8Array, iterations: number): Promise<ArrayBuffer> {
-	const key = await crypto.subtle.importKey("raw", encoder.encode(password), "PBKDF2", false, ["deriveBits"]);
-	return crypto.subtle.deriveBits(
-		{ name: "PBKDF2", hash: "SHA-256", salt: salt as BufferSource, iterations },
-		key,
-		256,
+async function hmac(secret: string, data: Uint8Array): Promise<ArrayBuffer> {
+	const key = await crypto.subtle.importKey(
+		"raw",
+		encoder.encode(secret),
+		{ name: "HMAC", hash: "SHA-256" },
+		false,
+		["sign"],
 	);
+	return crypto.subtle.sign("HMAC", key, data as BufferSource);
 }
 
-export async function hashPassword(password: string): Promise<string> {
+/** Workers Free is 10ms CPU — PBKDF2 210k overflows. HMAC + high-entropy pepper fits. */
+export async function hashPassword(password: string, pepper: string): Promise<string> {
+	if (!pepper) throw new Error("missing_pepper");
 	const salt = crypto.getRandomValues(new Uint8Array(16));
-	const bits = await derive(password, salt, ITERATIONS);
-	return `pbkdf2$${ITERATIONS}$${toB64(salt)}$${toB64(bits)}`;
+	const payload = new Uint8Array(salt.length + encoder.encode(password).length);
+	payload.set(salt, 0);
+	payload.set(encoder.encode(password), salt.length);
+	const bits = await hmac(pepper, payload);
+	return `hmac$1$${toB64(salt)}$${toB64(bits)}`;
 }
 
-export async function verifyPassword(password: string, stored: string): Promise<boolean> {
+export async function verifyPassword(password: string, stored: string, pepper: string): Promise<boolean> {
 	const parts = stored.split("$");
-	if (parts.length !== 4 || parts[0] !== "pbkdf2") return false;
-	const iterations = Number(parts[1]);
-	if (!Number.isFinite(iterations) || iterations < 10_000) return false;
+	if (parts.length !== 4 || parts[0] !== "hmac" || parts[1] !== "1" || !pepper) return false;
 	const salt = fromB64(parts[2]);
 	const expected = fromB64(parts[3]);
-	const actual = new Uint8Array(await derive(password, salt, iterations));
+	const payload = new Uint8Array(salt.length + encoder.encode(password).length);
+	payload.set(salt, 0);
+	payload.set(encoder.encode(password), salt.length);
+	const actual = new Uint8Array(await hmac(pepper, payload));
 	if (actual.length !== expected.length) return false;
 	let diff = 0;
 	for (let i = 0; i < actual.length; i++) diff |= actual[i] ^ expected[i];

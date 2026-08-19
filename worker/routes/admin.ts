@@ -309,11 +309,11 @@ adminApi.put("/settings", async (c) => {
 adminApi.put("/password", async (c) => {
 	const body = await c.req.json<{ current?: string; next?: string }>().catch(() => ({}));
 	const config = await getConfig(c.env);
-	if (!(await verifyPassword(body.current ?? "", config.passwordHash))) {
+	if (!(await verifyPassword(body.current ?? "", config.passwordHash, c.env.JWT_SECRET))) {
 		return c.json({ error: "invalid_password" }, 401);
 	}
 	if (!body.next || body.next.length < 8) return c.json({ error: "password_too_short" }, 400);
-	config.passwordHash = await hashPassword(body.next);
+	config.passwordHash = await hashPassword(body.next, c.env.JWT_SECRET);
 	config.updatedAt = Date.now();
 	await putConfig(c.env, config);
 	return c.json({ ok: true });

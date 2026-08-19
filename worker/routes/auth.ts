@@ -45,7 +45,8 @@ auth.post("/setup", async (c) => {
 	const body = await c.req.json<{ password?: string; siteName?: string }>().catch(() => ({}));
 	const password = body.password?.trim() ?? "";
 	if (password.length < 8) return c.json({ error: "password_too_short" }, 400);
-	config.passwordHash = await hashPassword(password);
+	if (!c.env.JWT_SECRET) return c.json({ error: "missing_jwt_secret" }, 500);
+	config.passwordHash = await hashPassword(password, c.env.JWT_SECRET);
 	config.setupComplete = true;
 	if (body.siteName?.trim()) config.siteName = body.siteName.trim();
 	config.updatedAt = Date.now();
@@ -60,7 +61,7 @@ auth.post("/login", async (c) => {
 	if (!config.setupComplete) return c.json({ error: "not_setup" }, 400);
 	const body = await c.req.json<{ password?: string }>().catch(() => ({}));
 	const password = body.password ?? "";
-	if (!(await verifyPassword(password, config.passwordHash))) {
+	if (!(await verifyPassword(password, config.passwordHash, c.env.JWT_SECRET))) {
 		return c.json({ error: "invalid_password" }, 401);
 	}
 	const token = await signJwt(c.env.JWT_SECRET, TOKEN_TTL_SEC);
