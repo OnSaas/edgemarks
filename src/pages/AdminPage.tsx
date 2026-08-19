@@ -4,6 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import type { Bookmark, Group } from "@shared/types";
 import { BookmarkCard } from "../components/BookmarkCard";
 import { BookmarkForm } from "../components/BookmarkForm";
+import { Button, IconButton, Input } from "../components/ui";
 import { api } from "../lib/api";
 import { useT } from "../lib/i18n";
 
@@ -44,8 +45,8 @@ export function AdminPage() {
 	const visibleIds = useMemo(() => bookmarks.map((b) => b.id), [bookmarks]);
 
 	return (
-		<div className="grid gap-6 lg:grid-cols-[240px_1fr]">
-			<aside className="space-y-4">
+		<div className="grid gap-5 lg:grid-cols-[240px_1fr] lg:gap-6">
+			<aside className="space-y-3">
 				<form
 					className="flex gap-2"
 					onSubmit={async (e) => {
@@ -56,17 +57,12 @@ export function AdminPage() {
 						await load();
 					}}
 				>
-					<input
-						value={groupName}
-						onChange={(e) => setGroupName(e.target.value)}
-						placeholder={t("group.add")}
-						className="w-full rounded-lg border border-[var(--line)] bg-[var(--card)] px-3 py-2 text-sm"
-					/>
-					<button type="submit" className="rounded-lg bg-teal-700 px-2 text-white">
+					<Input value={groupName} onChange={(e) => setGroupName(e.target.value)} placeholder={t("group.add")} />
+					<IconButton type="submit" aria-label={t("group.add")}>
 						<Plus size={16} />
-					</button>
+					</IconButton>
 				</form>
-				<div className="space-y-1">
+				<div className="flex gap-2 overflow-x-auto pb-1 lg:block lg:space-y-1 lg:overflow-visible">
 					{groups.length === 0 && <p className="text-sm text-[var(--muted)]">{t("group.empty")}</p>}
 					{groups.map((g) => (
 						<div
@@ -85,9 +81,9 @@ export function AdminPage() {
 								setDragId(null);
 								await load();
 							}}
-							className="flex items-center gap-2 rounded-lg border border-[var(--line)] bg-[var(--card)] px-2 py-1.5"
+							className="flex h-9 min-w-[12rem] items-center gap-1.5 rounded-lg border border-[var(--line)] bg-[var(--card)] px-2 lg:min-w-0"
 						>
-							<GripVertical size={14} className="cursor-grab text-[var(--muted)]" />
+							<GripVertical size={14} className="hidden shrink-0 cursor-grab text-[var(--muted)] lg:block" />
 							<input
 								className="min-w-0 flex-1 bg-transparent text-sm outline-none"
 								defaultValue={g.name}
@@ -98,19 +94,19 @@ export function AdminPage() {
 									}
 								}}
 							/>
-							<button
+							<Button
 								type="button"
-								className={`text-xs ${g.isPublic ? "text-teal-700" : "text-[var(--muted)]"}`}
+								variant="ghost"
+								className={`h-7 w-7 px-0 text-xs ${g.isPublic ? "text-teal-700" : ""}`}
 								onClick={async () => {
 									await api.updateGroup(g.id, { isPublic: !g.isPublic });
 									await load();
 								}}
 							>
 								{g.isPublic ? "P" : "·"}
-							</button>
-							<button
-								type="button"
-								className="text-[var(--muted)] hover:text-red-500"
+							</Button>
+							<IconButton
+								className="h-7 w-7 border-0 bg-transparent"
 								onClick={async () => {
 									if (!confirm(t("confirm.delete"))) return;
 									await api.deleteGroup(g.id);
@@ -118,37 +114,31 @@ export function AdminPage() {
 								}}
 							>
 								<Trash2 size={14} />
-							</button>
+							</IconButton>
 						</div>
 					))}
 				</div>
-				<p className="text-xs text-[var(--muted)]">{t("sort.hint")}</p>
+				<p className="hidden text-xs text-[var(--muted)] lg:block">{t("sort.hint")}</p>
 			</aside>
 			<section>
-				<div className="mb-4 flex flex-wrap items-center gap-2">
-					<input
-						value={q}
-						onChange={(e) => setQ(e.target.value)}
-						placeholder={t("search.placeholder")}
-						className="min-w-[12rem] flex-1 rounded-xl border border-[var(--line)] bg-[var(--card)] px-4 py-2.5"
-					/>
-					<button
+				<div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+					<Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("search.placeholder")} className="sm:flex-1" />
+					<Button
 						type="button"
-						className="rounded-xl bg-teal-700 px-3 py-2 text-sm text-white"
 						onClick={() => {
 							setEditing({ isPublic: false, tags: [] });
 							setFormOpen(true);
 						}}
 					>
 						{t("bookmark.add")}
-					</button>
+					</Button>
 				</div>
 				{selectedCount > 0 && (
 					<div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl border border-[var(--line)] bg-[var(--card)] px-3 py-2 text-sm">
 						<span>{t("batch.selected", { n: selectedCount })}</span>
-						<button
+						<Button
 							type="button"
-							className="rounded-lg border border-[var(--line)] px-2 py-1"
+							variant="secondary"
 							onClick={async () => {
 								await api.setVisibility([...selected], true);
 								setSelected(new Set());
@@ -156,10 +146,10 @@ export function AdminPage() {
 							}}
 						>
 							{t("batch.public")}
-						</button>
-						<button
+						</Button>
+						<Button
 							type="button"
-							className="rounded-lg border border-[var(--line)] px-2 py-1"
+							variant="secondary"
 							onClick={async () => {
 								await api.setVisibility([...selected], false);
 								setSelected(new Set());
@@ -167,13 +157,11 @@ export function AdminPage() {
 							}}
 						>
 							{t("batch.private")}
-						</button>
+						</Button>
 					</div>
 				)}
 				{bookmarks.length === 0 ? (
-					<div className="rounded-2xl border border-dashed border-[var(--line)] p-10 text-center text-[var(--muted)]">
-						{t("empty.admin")}
-					</div>
+					<div className="rounded-xl border border-dashed border-[var(--line)] p-8 text-center text-sm text-[var(--muted)] sm:p-10">{t("empty.admin")}</div>
 				) : (
 					<div className="grid gap-3 sm:grid-cols-2">
 						{bookmarks.map((b) => (
@@ -224,23 +212,16 @@ export function AdminPage() {
 						else await api.createBookmark(body);
 						await load();
 					}}
+					onDelete={
+						editing?.id
+							? async () => {
+									if (!editing.id) return;
+									await api.deleteBookmark(editing.id);
+									await load();
+								}
+							: undefined
+					}
 				/>
-				{editing?.id && formOpen && (
-					<div className="mt-3 text-right">
-						<button
-							type="button"
-							className="text-sm text-red-500"
-							onClick={async () => {
-								if (!editing.id || !confirm(t("confirm.delete"))) return;
-								await api.deleteBookmark(editing.id);
-								setFormOpen(false);
-								await load();
-							}}
-						>
-							{t("bookmark.delete")}
-						</button>
-					</div>
-				)}
 			</section>
 		</div>
 	);

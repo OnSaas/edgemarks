@@ -19,6 +19,7 @@ body {
 	font-family: var(--font-sans);
 	background: var(--bg);
 	color: var(--fg);
+	text-wrap: pretty;
 }
 
 :root {
@@ -28,6 +29,8 @@ body {
 	--muted: #71717a;
 	--line: #e4e4e7;
 	--soft: #fafafa;
+	--control-h: 36px;
+	--radius: 8px;
 }
 
 .dark {
@@ -41,4 +44,20 @@ body {
 
 ::selection {
 	background: #0f766e55;
+}
+
+button,
+input,
+select,
+textarea {
+	font: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		transition-duration: 0.01ms !important;
+	}
 }

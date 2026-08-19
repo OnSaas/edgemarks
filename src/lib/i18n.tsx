@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { Button } from "../components/ui";
 
 const en = {
 	"app.name": "EdgeBookmarks",
@@ -8,6 +9,7 @@ const en = {
 	"nav.login": "Sign in",
 	"nav.logout": "Sign out",
 	"nav.settings": "Settings",
+	"nav.menu": "Menu",
 	"nav.import": "Import / Export",
 	"search.placeholder": "Search title, URL, tags…",
 	"filter.all": "All",
@@ -108,6 +110,7 @@ const zh: Record<string, string> = {
 	"nav.login": "登录",
 	"nav.logout": "退出",
 	"nav.settings": "设置",
+	"nav.menu": "菜单",
 	"nav.import": "导入导出",
 	"search.placeholder": "搜索标题、链接、标签…",
 	"filter.all": "全部",
@@ -252,13 +255,9 @@ export function useLocale() {
 export function LanguageToggle() {
 	const { locale, setLocale } = useLocale();
 	return (
-		<button
-			type="button"
-			onClick={() => setLocale(locale === "en" ? "zh" : "en")}
-			className="inline-flex h-9 min-w-9 items-center justify-center rounded-lg border border-[var(--line)] px-2 text-xs font-medium hover:bg-[var(--soft)]"
-		>
+		<Button variant="secondary" className="min-w-9 px-2" onClick={() => setLocale(locale === "en" ? "zh" : "en")}>
 			<span className="sm:hidden">{locale === "en" ? "中" : "EN"}</span>
 			<span className="hidden sm:inline">{locale === "en" ? "中文" : "English"}</span>
-		</button>
+		</Button>
 	);
 }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { BackupPayload, ImportResult } from "@shared/types";
+import { Button, PageTitle, Panel, Textarea } from "../components/ui";
 import { api } from "../lib/api";
 import { useT } from "../lib/i18n";
 
@@ -8,9 +9,7 @@ export function ImportPage() {
 	const [text, setText] = useState("");
 	const [makePublic, setMakePublic] = useState(false);
 	const [result, setResult] = useState<ImportResult | null>(null);
-	const [backups, setBackups] = useState<{ r2: boolean; items: Array<{ key: string; size: number; uploaded: string }> } | null>(
-		null,
-	);
+	const [backups, setBackups] = useState<{ r2: boolean; items: Array<{ key: string; size: number; uploaded: string }> } | null>(null);
 	const [error, setError] = useState("");
 
 	const refreshBackups = () => {
@@ -26,22 +25,16 @@ export function ImportPage() {
 	};
 
 	return (
-		<div className="mx-auto grid max-w-3xl gap-6">
-			<h1 className="text-2xl font-semibold">{t("import.title")}</h1>
-			<section className="rounded-2xl border border-[var(--line)] bg-[var(--card)] p-4">
-				<textarea
-					rows={10}
-					value={text}
-					onChange={(e) => setText(e.target.value)}
-					placeholder={t("import.paste")}
-					className="w-full rounded-xl border border-[var(--line)] bg-[var(--bg)] px-3 py-2 font-mono text-xs"
-				/>
-				<div className="mt-3 flex flex-wrap items-center gap-3">
-					<label className="flex items-center gap-2 text-sm">
-						<input type="checkbox" checked={makePublic} onChange={(e) => setMakePublic(e.target.checked)} />
+		<div className="mx-auto grid max-w-3xl gap-5">
+			<PageTitle>{t("import.title")}</PageTitle>
+			<Panel>
+				<Textarea rows={10} value={text} onChange={(e) => setText(e.target.value)} placeholder={t("import.paste")} className="font-mono text-xs" />
+				<div className="flex flex-wrap items-center gap-2">
+					<label className="flex h-9 items-center gap-2 text-sm">
+						<input type="checkbox" className="accent-teal-700" checked={makePublic} onChange={(e) => setMakePublic(e.target.checked)} />
 						{t("import.makePublic")}
 					</label>
-					<label className="cursor-pointer rounded-lg border border-[var(--line)] px-3 py-1.5 text-sm">
+					<label className="inline-flex h-9 cursor-pointer items-center rounded-lg border border-[var(--line)] bg-[var(--card)] px-3 text-sm font-medium hover:bg-[var(--soft)]">
 						{t("import.file")}
 						<input
 							type="file"
@@ -54,9 +47,8 @@ export function ImportPage() {
 							}}
 						/>
 					</label>
-					<button
+					<Button
 						type="button"
-						className="rounded-lg bg-teal-700 px-3 py-1.5 text-sm text-white"
 						onClick={async () => {
 							setError("");
 							try {
@@ -67,10 +59,10 @@ export function ImportPage() {
 						}}
 					>
 						{t("import.run")}
-					</button>
+					</Button>
 				</div>
 				{result && (
-					<p className="mt-3 text-sm text-teal-700">
+					<p className="text-sm text-teal-700">
 						{t("import.result", {
 							created: result.bookmarksCreated,
 							updated: result.bookmarksUpdated,
@@ -79,21 +71,21 @@ export function ImportPage() {
 						})}
 					</p>
 				)}
-				{error && <p className="mt-3 text-sm text-red-500">{error}</p>}
-			</section>
-			<section className="flex flex-wrap gap-2">
-				<button type="button" className="rounded-lg border border-[var(--line)] px-3 py-2 text-sm" onClick={() => download("json", "all")}>
+				{error && <p className="text-sm text-red-500">{error}</p>}
+			</Panel>
+			<div className="flex flex-wrap gap-2">
+				<Button type="button" variant="secondary" onClick={() => download("json", "all")}>
 					{t("export.json")}
-				</button>
-				<button type="button" className="rounded-lg border border-[var(--line)] px-3 py-2 text-sm" onClick={() => download("html", "all")}>
+				</Button>
+				<Button type="button" variant="secondary" onClick={() => download("html", "all")}>
 					{t("export.html")}
-				</button>
-				<button type="button" className="rounded-lg border border-[var(--line)] px-3 py-2 text-sm" onClick={() => download("json", "public")}>
+				</Button>
+				<Button type="button" variant="secondary" onClick={() => download("json", "public")}>
 					{t("export.public")} JSON
-				</button>
-				<button
+				</Button>
+				<Button
 					type="button"
-					className="rounded-lg border border-[var(--line)] px-3 py-2 text-sm"
+					variant="secondary"
 					onClick={async () => {
 						try {
 							await api.backupR2();
@@ -104,8 +96,8 @@ export function ImportPage() {
 					}}
 				>
 					{t("backup.r2")}
-				</button>
-				<label className="cursor-pointer rounded-lg border border-[var(--line)] px-3 py-2 text-sm">
+				</Button>
+				<label className="inline-flex h-9 cursor-pointer items-center rounded-lg border border-[var(--line)] bg-[var(--card)] px-3 text-sm font-medium hover:bg-[var(--soft)]">
 					{t("backup.restore")}
 					<input
 						type="file"
@@ -119,24 +111,24 @@ export function ImportPage() {
 						}}
 					/>
 				</label>
-			</section>
+			</div>
 			<section>
-				<h2 className="mb-2 font-medium">{t("backup.list")}</h2>
+				<h2 className="mb-2 text-sm font-medium">{t("backup.list")}</h2>
 				{!backups?.r2 && <p className="text-sm text-[var(--muted)]">{t("backup.none")}</p>}
 				<ul className="space-y-2">
 					{backups?.items.map((item) => (
-						<li key={item.key} className="flex items-center justify-between rounded-lg border border-[var(--line)] px-3 py-2 text-sm">
+						<li key={item.key} className="flex h-9 items-center justify-between gap-2 rounded-lg border border-[var(--line)] px-3 text-sm">
 							<span className="truncate">{item.key}</span>
-							<button
+							<Button
 								type="button"
-								className="text-teal-700"
+								variant="ghost"
 								onClick={async () => {
 									if (!confirm(t("confirm.restore"))) return;
 									await api.restoreKey(item.key);
 								}}
 							>
-								restore
-							</button>
+								{t("backup.restore")}
+							</Button>
 						</li>
 					))}
 				</ul>

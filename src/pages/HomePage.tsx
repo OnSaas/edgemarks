@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Bookmark, Group } from "@shared/types";
+import { DEFAULT_FEATURES } from "@shared/types";
 import { BookmarkCard } from "../components/BookmarkCard";
+import { Chip, Input } from "../components/ui";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { useT } from "../lib/i18n";
-import { DEFAULT_FEATURES } from "@shared/types";
 
 export function HomePage() {
 	const t = useT();
@@ -41,35 +42,22 @@ export function HomePage() {
 	const groupMap = Object.fromEntries(groups.map((g) => [g.id, g]));
 
 	return (
-		<div className="grid gap-6 md:grid-cols-[220px_1fr]">
+		<div className="grid gap-5 md:grid-cols-[200px_1fr] lg:grid-cols-[220px_1fr]">
 			<aside className="space-y-4">
 				<div>
 					<p className="mb-2 text-xs font-medium tracking-wide text-[var(--muted)] uppercase">{t("filter.all")}</p>
-					<div className="flex flex-wrap gap-1.5 md:flex-col">
-						<button
-							type="button"
-							onClick={() => setGroupId("")}
-							className={`rounded-lg px-3 py-1.5 text-left text-sm ${groupId === "" ? "bg-[var(--card)]" : "text-[var(--muted)]"}`}
-						>
+					<div className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 md:flex-col md:overflow-visible">
+						<Chip active={groupId === ""} onClick={() => setGroupId("")}>
 							{t("filter.all")}
-						</button>
-						<button
-							type="button"
-							onClick={() => setGroupId("ungrouped")}
-							className={`rounded-lg px-3 py-1.5 text-left text-sm ${groupId === "ungrouped" ? "bg-[var(--card)]" : "text-[var(--muted)]"}`}
-						>
+						</Chip>
+						<Chip active={groupId === "ungrouped"} onClick={() => setGroupId("ungrouped")}>
 							{t("filter.ungrouped")}
-						</button>
+						</Chip>
 						{groups.map((g) => (
-							<button
-								key={g.id}
-								type="button"
-								onClick={() => setGroupId(g.id)}
-								className={`rounded-lg px-3 py-1.5 text-left text-sm ${groupId === g.id ? "bg-[var(--card)]" : "text-[var(--muted)]"}`}
-							>
+							<Chip key={g.id} active={groupId === g.id} onClick={() => setGroupId(g.id)}>
 								{g.icon ? `${g.icon} ` : ""}
 								{g.name}
-							</button>
+							</Chip>
 						))}
 					</div>
 				</div>
@@ -78,34 +66,22 @@ export function HomePage() {
 						<p className="mb-2 text-xs font-medium tracking-wide text-[var(--muted)] uppercase">{t("count.tags")}</p>
 						<div className="flex flex-wrap gap-1.5">
 							{tags.map((item) => (
-								<button
-									key={item}
-									type="button"
-									onClick={() => setTag(tag === item ? "" : item)}
-									className={`rounded-full border px-2 py-0.5 text-xs ${tag === item ? "border-teal-700 text-teal-700" : "border-[var(--line)] text-[var(--muted)]"}`}
-								>
+								<Chip key={item} active={tag === item} className="h-7 rounded-md text-xs" onClick={() => setTag(tag === item ? "" : item)}>
 									{item}
-								</button>
+								</Chip>
 							))}
 						</div>
 					</div>
 				)}
 			</aside>
 			<section>
-				{features.showSearch && (
-					<input
-						value={q}
-						onChange={(e) => setQ(e.target.value)}
-						placeholder={t("search.placeholder")}
-						className="mb-4 w-full rounded-xl border border-[var(--line)] bg-[var(--card)] px-4 py-2.5"
-					/>
-				)}
+				{features.showSearch && <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("search.placeholder")} className="mb-4" />}
 				{site?.siteDescription && <p className="mb-3 text-sm text-[var(--muted)]">{site.siteDescription}</p>}
 				<p className="mb-3 text-sm text-[var(--muted)]">{t("count.bookmarks", { n: bookmarks.length })}</p>
 				{loading ? (
 					<p className="text-sm text-[var(--muted)]">…</p>
 				) : bookmarks.length === 0 ? (
-					<div className="rounded-2xl border border-dashed border-[var(--line)] p-10 text-center text-[var(--muted)]">
+					<div className="rounded-xl border border-dashed border-[var(--line)] p-8 text-center text-sm text-[var(--muted)] sm:p-10">
 						{q || tag || groupId ? t("empty.search") : t("empty.public")}
 					</div>
 				) : (
