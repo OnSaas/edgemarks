@@ -27,6 +27,41 @@ export function ImportPage() {
 	return (
 		<div className="mx-auto grid max-w-3xl gap-5">
 			<PageTitle>{t("import.title")}</PageTitle>
+			<Panel title={t("import.browser")}>
+				<p className="text-sm text-[var(--muted)]">{t("import.browserHint")}</p>
+				<div className="flex flex-wrap items-center gap-2">
+					<label className="flex h-9 items-center gap-2 text-sm">
+						<input type="checkbox" className="accent-teal-700" checked={makePublic} onChange={(e) => setMakePublic(e.target.checked)} />
+						{t("import.makePublic")}
+					</label>
+					<label className="inline-flex h-9 cursor-pointer items-center rounded-lg bg-teal-700 px-3 text-sm font-medium text-white hover:bg-teal-800">
+						{t("import.browserFile")}
+						<input
+							type="file"
+							accept=".html,.htm,text/html"
+							className="hidden"
+							onChange={async (e) => {
+								const file = e.target.files?.[0];
+								e.target.value = "";
+								if (!file) return;
+								setError("");
+								setResult(null);
+								try {
+									const html = await file.text();
+									setText(html);
+									const next = await api.importText(html, makePublic);
+									setResult(next);
+									if (next.bookmarksCreated + next.bookmarksUpdated + next.groupsCreated === 0) {
+										setError(t("import.browserEmpty"));
+									}
+								} catch {
+									setError(t("error.generic"));
+								}
+							}}
+						/>
+					</label>
+				</div>
+			</Panel>
 			<Panel>
 				<Textarea rows={10} value={text} onChange={(e) => setText(e.target.value)} placeholder={t("import.paste")} className="font-mono text-xs" />
 				<div className="flex flex-wrap items-center gap-2">

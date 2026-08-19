@@ -20,7 +20,15 @@ function decodeEntities(raw: string): string {
 		.replace(/&lt;/g, "<")
 		.replace(/&gt;/g, ">")
 		.replace(/&quot;/g, '"')
-		.replace(/&#39;/g, "'");
+		.replace(/&#39;/g, "'")
+		.replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCodePoint(Number.parseInt(hex, 16)))
+		.replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)));
+}
+
+function hrefFromAttrs(attrs: string): string | null {
+	const m = attrs.match(/href\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i);
+	const raw = decodeEntities(m?.[1] ?? m?.[2] ?? m?.[3] ?? "");
+	return canonicalizeUrl(raw);
 }
 
 export function parseNetscapeHtml(html: string): Parsed {
@@ -28,18 +36,21 @@ export function parseNetscapeHtml(html: string): Parsed {
 	const bookmarks: Parsed["bookmarks"] = [];
 	const stack: string[] = [];
 	const seenGroups = new Set<string>();
+	const skipFolder = /^(bookmarks|bookmarks bar|bookmarks toolbar|other bookmarks|mobile bookmarks|书签栏|书签菜单|其他书签|移动设备书签|收藏夹栏|收藏夹|其他收藏夹)$/i;
 
-	const tokens = html.split(/<(?=DT|DL|\/DL)/i);
+	const tokens = html.split(/<(?=DT|DL|\/DL|H3|A\s)/i);
 	for (const token of tokens) {
-		const heading = token.match(/<H3[^>]*>([^<]*)<\/H3>/i);
+		const heading = token.match(/^H3\b[^>]*>([\s\S]*?)<\/H3>/i) || token.match(/<H3[^>]*>([\s\S]*?)<\/H3>/i);
 		if (heading) {
-			const name = decodeEntities(heading[1].trim());
+			const name = decodeEntities(heading[1].replace(/<[^>]+>/g, "").trim());
 			if (!name) continue;
-			const parent = stack.at(-1) ?? null;
-			const key = `${parent ?? ""}/${name}`;
-			if (!seenGroups.has(key)) {
-				seenGroups.add(key);
-				groups.push({ name, parentName: parent });
+			const parent = [...stack].reverse().find((n) => !skipFolder.test(n)) ?? null;
+			if (!skipFolder.test(name)) {
+				const key = `${parent ?? ""}/${name}`;
+				if (!seenGroups.has(key)) {
+					seenGroups.add(key);
+					groups.push({ name, parentName: parent });
+				}
 			}
 			stack.push(name);
 			continue;
@@ -48,14 +59,27 @@ export function parseNetscapeHtml(html: string): Parsed {
 			stack.pop();
 			continue;
 		}
-		const link = token.match(/<A\s+([^>]+)>([^<]*)<\/A>/i);
+
+		const link = token.match(/^A\s+([^>]+)>([\s\S]*?)<\/A>/i) || token.match(/<A\s+([^>]+)>([\s\S]*?)<\/A>/i);
 		if (link) {
-			const href = canonicalizeUrl(link[1].match(/HREF="([^"]+)"/i)?.[1] ?? "");
+			const href = hrefFromAttrs(link[1]);
 			if (!href) continue;
 			bookmarks.push({
-				title: decodeEntities(link[2].trim() || href),
+				title: decodeEntities(link[2].replace(/<[^>]+>/g, "").trim() || href),
 				url: href,
-				groupName: stack.at(-1) ?? null,
+				groupName: [...stack].reverse().find((n) => !skipFolder.test(n)) ?? null,
+			});
+		}
+	}
+
+	if (bookmarks.length === 0) {
+		for (const match of html.matchAll(/<a\s+([^>]+)>([\s\S]*?)<\/a>/gi)) {
+			const href = hrefFromAttrs(match[1]);
+			if (!href) continue;
+			bookmarks.push({
+				title: decodeEntities(match[2].replace(/<[^>]+>/g, "").trim() || href),
+				url: href,
+				groupName: null,
 			});
 		}
 	}
@@ -164,7 +188,7 @@ export function parseCustomJson(raw: unknown): Parsed {
 }
 
 export function detectAndParse(text: string): Parsed {
-	const trimmed = text.trim();
+	const trimmed = text.replace(/^\uFEFF/, "").trim();
 	if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
 		const json = JSON.parse(trimmed) as unknown;
 		if (json && typeof json === "object" && "roots" in (json as object)) return parseChromeJson(json);

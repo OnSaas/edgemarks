@@ -18,6 +18,31 @@ describe("import-export", () => {
 		expect(parsed.bookmarks[0]?.groupName).toBe("Work");
 	});
 
+	it("parses chrome/edge exported html", () => {
+		const html = `${"\uFEFF"}<!DOCTYPE NETSCAPE-Bookmark-file-1>
+<!-- This is an automatically generated file. -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<TITLE>Bookmarks</TITLE>
+<H1>Bookmarks</H1>
+<DL><p>
+    <DT><H3 ADD_DATE="1" PERSONAL_TOOLBAR_FOLDER="true">书签栏</H3>
+    <DL><p>
+        <DT><A href="https://example.com/path?a=1&amp;b=2" ADD_DATE="1" ICON="data:image/png;base64,xxx">Example</A>
+        <DT><H3>Work</H3>
+        <DL><p>
+            <DT><A HREF="https://workers.cloudflare.com/">CF</A>
+            <DT><A HREF="javascript:void(0)">skip me</A>
+        </DL><p>
+    </DL><p>
+</DL><p>`;
+		const parsed = detectAndParse(html);
+		expect(parsed.groups.map((g) => g.name)).toEqual(["Work"]);
+		expect(parsed.bookmarks).toHaveLength(2);
+		expect(parsed.bookmarks[0]?.url).toBe("https://example.com/path?a=1&b=2");
+		expect(parsed.bookmarks[0]?.groupName).toBeNull();
+		expect(parsed.bookmarks[1]?.groupName).toBe("Work");
+	});
+
 	it("parses chrome bookmark json", () => {
 		const parsed = detectAndParse(
 			JSON.stringify({
